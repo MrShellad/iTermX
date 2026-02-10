@@ -55,7 +55,17 @@ jobs:
       # 这里先运行 init 生成 gen/android 目录，再运行 build
       - name: Initialize and Build Android
         run: |
+          # 安装编译 OpenSSL 必须的工具
+          sudo apt-get update && sudo apt-get install -y perl make build-essential
+
+          # 初始化项目
           pnpm tauri android init
+
+          # 关键：手动设置 NDK 环境变量，帮助 openssl-src 找到编译器
+          # 25.2.9519653 是 GitHub Actions Ubuntu 环境的默认 NDK 版本
+          export ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653
+          
+          # 执行编译
           pnpm tauri android build --debug
 
       # 10. 上传生成的 APK 文件
