@@ -23,16 +23,15 @@ tauri-plugin-fs = "2.0.0"
 tauri-plugin-dialog = "2"
 tauri-plugin-os = "2"
 
-# 🟢 [关键修改] sqlx：增加 bundled 特性
-# 这确保在安卓编译时，SQLite 会被编译进二进制文件，而不是去寻找手机系统里不存在的 .so 库
+# 🟢 数据库强制使用 bundled，防止安卓找不到库
 sqlx = { version = "0.8", features = [ "sqlite", "runtime-tokio" ], default-features = false }
 libsqlite3-sys = { version = "0.28", features = ["bundled"] }
 
-# 🟢 [关键修改] russh：纯 Rust 实现，彻底摆脱 OpenSSL
+# 🟢 纯 Rust 的 SSH 库
 russh = "0.40"
 russh-keys = "0.40"
 
-# 🟢 [关键修改] reqwest：强制使用 rustls
+# 🟢 网络请求强制使用 rustls
 reqwest = { version = "0.11", default-features = false, features = ["json", "stream", "multipart", "rustls-tls"] }
 
 tokio = { version = "1", features = ["full"] }
