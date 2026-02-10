@@ -1,0 +1,223 @@
+/* src/styles/components/common/interactive-card.css */
+
+/* =========================================
+   Interactive Card System (Clean Glass Version)
+   ========================================= */
+
+/* --- 1. 卡片容器 (.i-card) --- */
+.i-card {
+  /* 颜色定义 */
+  --ic-bg: hsl(var(--card) / 0.7);       /* 背景稍微实一点，减少杂色 */
+  --ic-fg: hsl(var(--card-foreground));
+  --ic-border: hsl(var(--border) / 0.5); /* 边框 */
+  --ic-radius: var(--radius); 
+  
+  /* 阴影 */
+  --ic-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+  --ic-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --ic-transition: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  
+  background-color: var(--ic-bg);
+  color: var(--ic-fg);
+  
+  /* 🟢 [修复 1] 毛玻璃滤镜 */
+  backdrop-filter: blur(12px); 
+  -webkit-backdrop-filter: blur(12px);
+
+  /* 🟢 [修复 2] 边缘锐化处理 */
+  border: 1px solid var(--ic-border);
+  border-radius: var(--ic-radius);
+  background-clip: padding-box; /* 关键：防止背景溢出到边框 */
+  
+  /* 🟢 [修复 3] 使用内阴影代替 ::before 来做顶部高光，边缘更干净 */
+  box-shadow: 
+    var(--ic-shadow),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.1); /* 顶部微弱高光 */
+
+  transition: all 0.3s var(--ic-transition);
+  
+  /* 🟢 [修复 4] 移除可能导致锯齿的 3D 变换 */
+
+  overflow: hidden;
+}
+
+/* 悬浮状态 */
+.i-card:hover,
+.i-card:has([data-state="open"]) {
+  /* 使用 translateY 而不是 scale，减少模糊风险 */
+  transform: none;
+  box-shadow: var(--ic-shadow-hover), inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+  background-color: hsl(var(--card) / 0.8);
+  border-color: hsl(var(--border) / 0.8);
+  z-index: 5;
+}
+
+/* 选中/置顶状态 */
+.i-card.is-active,
+.i-card.is-pinned {
+  background-color: hsl(var(--primary) / 0.05);
+  border-color: hsl(var(--primary) / 0.3);
+}
+
+/* --- 2. 组件部件 --- */
+
+/* [图标盒子] */
+.i-icon {
+  width: 2.5rem;   
+  height: 2.5rem;
+  border-radius: var(--ic-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  
+  background-color: #3C83F6;
+  color: white;
+  border: none;
+  /* 简单的内阴影增加质感 */
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25);
+  
+  transition: transform 0.3s var(--ic-transition), background-color 0.3s;
+}
+
+.i-card:hover .i-icon {
+  transform: scale(1.05) rotate(-3deg);
+  background-color: #2563eb; 
+}
+
+/* [IP 徽章] */
+.i-badge {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--ic-radius);
+  
+  /* 半透明背景 */
+  background-color: hsl(var(--muted) / 0.5);
+  border: 1px solid transparent; /* 预留边框位，防止 hover 抖动 */
+  color: hsl(var(--muted-foreground));
+  
+  font-family: var(--font-mono);
+  font-weight: 500;
+  
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  user-select: none;
+}
+.i-card:hover .i-badge {
+  background-color: hsl(var(--muted) / 0.7);
+}
+.i-badge:hover {
+  background-color: hsl(var(--secondary)) !important;
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--border) / 0.5);
+}
+.i-badge.is-highlighted {
+  background-color: rgba(16, 185, 129, 0.15) !important; 
+  color: #047857 !important;
+  border-color: rgba(16, 185, 129, 0.2) !important;
+}
+.dark .i-badge.is-highlighted {
+  color: #34d399 !important;
+}
+
+/* [标签] */
+.i-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.6rem; 
+  border-radius: 4px;
+  
+  font-size: 0.65rem;
+  font-weight: 500;
+  white-space: nowrap;
+  
+  background-color: hsl(var(--muted) / 0.5);
+  color: hsl(var(--muted-foreground));
+  border: none;
+  opacity: 1; 
+  
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+/* [连接按钮] */
+.i-btn-connect {
+  height: 1.75rem;
+  padding: 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: var(--ic-radius);
+  
+  /* 默认态 */
+  background-color: hsl(var(--muted) / 0.5);
+  color: hsl(var(--muted-foreground));
+  border: 1px solid transparent;
+  
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  flex-shrink: 0;
+}
+
+/* 卡片悬停 或 按钮悬停 */
+.i-card:hover .i-btn-connect,
+.i-btn-connect:hover {
+  background-color: #10b981; 
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); 
+}
+
+/* 仅按钮悬停 */
+.i-btn-connect:hover {
+  transform: scale(1.05);
+}
+.i-btn-connect:active {
+  transform: scale(0.95);
+}
+
+/* --- 3. 布局辅助类 --- */
+
+.i-tags-wrapper {
+  display: flex;
+  gap: 0.35rem;
+  overflow: hidden;
+  height: 1.5rem; 
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  
+  mask-image: linear-gradient(to right, black 85%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+}
+
+.i-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.25rem;
+  flex-shrink: 0;
+}
+
+.i-card-footer {
+  margin-top: auto; 
+  padding-top: 0.75rem; 
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px dashed hsl(var(--border) / 0.3);
+  flex-shrink: 0; 
+  gap: 0.5rem;
+}

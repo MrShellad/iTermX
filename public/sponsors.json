@@ -1,0 +1,27 @@
+{
+  "donors": [
+    { "name": "Vercel", "score": 1000 },
+    { "name": "Evan You", "score": 500 },
+    { "name": "Rust Foundation", "score": 800 },
+    { "name": "Anonymous", "score": 10 },
+    { "name": "TinyUser", "score": 5 }
+  ],
+  "sponsors": [
+    {
+      "id": "ad_cloud",
+      "title": "Cloud Provider X",
+      "desc": "Deploy servers in seconds with 99.9% uptime.",
+      "link": "https://example.com/cloud",
+      "iconName": "cloud",
+      "bgGradient": "bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-500/10 dark:to-cyan-500/10 border-blue-100 dark:border-blue-500/20"
+    },
+    {
+      "id": "ad_tool",
+      "title": "DevTools Pro",
+      "desc": "The ultimate toolkit for backend engineers.",
+      "link": "https://example.com/tools",
+      "iconName": "terminal",
+      "bgGradient": "bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-500/10 dark:to-indigo-500/10 border-purple-100 dark:border-purple-500/20"
+    }
+  ]
+}

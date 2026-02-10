@@ -1,0 +1,35 @@
+/* src/styles/components/terminal/xterm.css */
+
+/* 1. 强制覆盖 xterm 默认的 overflow 行为 */
+.xterm-custom-scrollbar .xterm-viewport {
+  overflow-y: auto !important; /* 只有内容溢出时才显示滚动条 */
+}
+
+/* 2. 滚动条整体变细 (6px) */
+.xterm-custom-scrollbar .xterm-viewport::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+}
+
+/* 3. 隐藏轨道背景 (透明) */
+.xterm-custom-scrollbar .xterm-viewport::-webkit-scrollbar-track {
+  background: transparent !important;
+  margin: 4px 0;
+}
+
+/* 4. 滑块默认透明 (实现自动隐藏效果) */
+.xterm-custom-scrollbar .xterm-viewport::-webkit-scrollbar-thumb {
+  background-color: transparent; /* 默认看不见 */
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+/* 5. 鼠标移入终端区域时，显示半透明滑块 */
+.xterm-custom-scrollbar:hover .xterm-viewport::-webkit-scrollbar-thumb {
+  background-color: rgba(128, 128, 128, 0.3); /* 灰色半透明 */
+}
+
+/* 6. 鼠标按住滑块时加深 */
+.xterm-custom-scrollbar .xterm-viewport::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(128, 128, 128, 0.5);
+}

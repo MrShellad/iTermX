@@ -1,0 +1,52 @@
+/* src/styles/components/common/input-modal.css */
+
+@layer components {
+  /* 弹窗遮罩层 */
+  .input-modal-overlay {
+    @apply fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-opacity duration-300;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  /* 弹窗主体容器 */
+  .input-modal-content {
+    @apply fixed left-[50%] top-[50%] z-50 w-full max-w-md translate-x-[-50%] translate-y-[-50%] 
+           rounded-xl border bg-white p-6 shadow-2xl duration-200
+           dark:bg-slate-950 dark:border-slate-800;
+    animation: zoomIn 0.2s ease-out;
+  }
+
+  /* 标题区域 */
+  .input-modal-header {
+    @apply mb-4 flex flex-col space-y-1.5 text-center sm:text-left;
+  }
+
+  /* 标题文字 */
+  .input-modal-title {
+    @apply text-lg font-semibold leading-none tracking-tight text-slate-900 dark:text-slate-50;
+  }
+
+  /* 输入框 */
+  .input-modal-input {
+    @apply flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm 
+           ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium 
+           placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 
+           focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50
+           dark:border-slate-800 dark:bg-slate-950 dark:ring-offset-slate-950 dark:placeholder:text-slate-400 dark:focus-visible:ring-blue-600;
+  }
+
+  /* 底部按钮区 */
+  .input-modal-footer {
+    @apply mt-6 flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2;
+  }
+}
+
+/* 简单的关键帧动画 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes zoomIn {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.96); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}

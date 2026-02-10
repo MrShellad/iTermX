@@ -1,0 +1,89 @@
+/* src/styles/components/snippet/snippet-card.css */
+
+.snippet-card {
+  --sc-bg: #ffffff;
+  --sc-border: #e2e8f0;
+  /* [优化] 更细腻的基础阴影 */
+  --sc-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  /* [优化] Hover 阴影不再那么扩散，更聚拢 */
+  --sc-shadow-hover: 0 8px 24px -6px rgba(0, 0, 0, 0.08); 
+  --sc-radius: 0.75rem; /* 稍微减小圆角，更精致 */
+  
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 220px; /* 稍微调低高度，更紧凑 */
+  padding: 1rem;
+  background-color: var(--sc-bg);
+  /* 使用 ring 代替 border，渲染更锐利 */
+  box-shadow: 0 0 0 1px var(--sc-border), var(--sc-shadow);
+  border-radius: var(--sc-radius);
+  transition: all 0.3s cubic-bezier(0.25, 0.4, 0.25, 1); /* 更自然的缓动 */
+  overflow: hidden;
+  /* 解决 Safari 圆角溢出问题 */
+  transform: translateZ(0);
+}
+
+.dark .snippet-card {
+  --sc-bg: #0f172a; /* Slate 900 */
+  --sc-border: rgba(255, 255, 255, 0.06);
+  --sc-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  --sc-shadow-hover: 0 10px 30px -5px rgba(0, 0, 0, 0.4);
+}
+
+/* [核心修复] 
+   1. :hover 时触发浮动
+   2. &.is-active 时（菜单打开时）强制保持浮动
+   3. focus-within 键盘操作时保持浮动
+*/
+.snippet-card:hover,
+.snippet-card.is-active,
+.snippet-card:focus-within {
+  /* [优化] 浮动距离减小，不再那么夸张 */
+  transform: translateY(-2px); 
+  /* 增加边框高亮，提升质感 */
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.4), var(--sc-shadow-hover); 
+  z-index: 10;
+}
+
+/* 代码预览区优化 */
+.snippet-card__code-block {
+  flex: 1;
+  background-color: #f8fafc; /* Slate 50 */
+  border-radius: 0.5rem;
+  border: 1px solid #f1f5f9; /* Slate 100 */
+  padding: 0.75rem;
+  margin: 0.75rem 0;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.7rem; /* 字体稍微调小 */
+  line-height: 1.5;
+  color: #475569; /* Slate 600 */
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  /* 防止文字模糊 */
+  -webkit-font-smoothing: antialiased; 
+}
+
+.dark .snippet-card__code-block {
+  background-color: #1e293b; /* Slate 800 */
+  border-color: rgba(255,255,255,0.05);
+  color: #94a3b8; /* Slate 400 */
+}
+
+.snippet-card__code-block:hover {
+  border-color: #cbd5e1;
+}
+.dark .snippet-card__code-block:hover {
+  border-color: #475569;
+}
+
+/* 遮罩层优化：更柔和的渐变 */
+.snippet-card__code-mask {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 48px;
+  background: linear-gradient(to bottom, transparent, var(--sc-bg) 90%);
+  pointer-events: none;
+}

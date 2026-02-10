@@ -1,0 +1,171 @@
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+
+     /* ===== Layout ===== */
+    --layout-text: 222.2 47% 20%;
+    --layout-overlay: 0 0% 100% / 0.1;
+
+    --titlebar-bg: 0 0% 100% / 0.4;
+    --titlebar-border: 0 0% 100% / 0.2;
+      /* ===== Sidebar ===== */
+    --sidebar-bg: 20 40% 98% / 0.8;
+    --sidebar-border: 214 50% 91%;
+
+    --sidebar-item-text: 215 16% 46%;
+    --sidebar-item-hover-bg: 210 40% 96%;
+    --sidebar-item-hover-text: 222 47% 11%;
+
+    --sidebar-item-active-bg: 0 0% 100%;
+    --sidebar-item-active-border: 221 83% 53% / 0.3;
+    --sidebar-item-active-text: 221 83% 53%;
+
+    --sidebar-badge-bg: 210 40% 96%;
+    --sidebar-badge-text: 215 16% 46%;
+
+    --sidebar-brand-bg: 221 83% 53%;
+    --sidebar-brand-text: 0 0% 100%;
+        /* ===== TitleBar ===== */
+    --titlebar-text: 215 16% 46%;
+    --titlebar-text-hover: 222.2 47.4% 11.2%;
+
+    --titlebar-btn-hover-bg: 210 40% 92%;
+
+    --titlebar-accent: 221 83% 53%;
+    --titlebar-accent-hover: 221 83% 45%;
+
+    --titlebar-close-hover-bg: 0 84% 60%;
+    --titlebar-close-hover-text: 0 0% 100%;
+
+     
+
+  }
+  
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 250 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --radius: 0.5rem;
+/* ===== Layout ===== */
+    --layout-text: 210 40% 92%;
+    --layout-overlay: 0 0% 0% / 0.25;
+
+    --titlebar-bg: 0 0% 0% / 0.25;
+    --titlebar-border: 0 0% 100% / 0.1;
+
+    /* ===== Sidebar ===== */
+    --sidebar-bg: 222 84% 5% / 0.9;
+    --sidebar-border: 217 32% 18%;
+
+    --sidebar-item-text: 215 20% 65%;
+    --sidebar-item-hover-bg: 0 0% 100% / 0.05;
+    --sidebar-item-hover-text: 210 40% 92%;
+
+    --sidebar-item-active-bg: 0 0% 100% / 0.1;
+    --sidebar-item-active-border: 210 40% 98% / 0.1;
+    --sidebar-item-active-text: 217 91% 60%;
+
+    --sidebar-badge-bg: 217 32% 18%;
+    --sidebar-badge-text: 215 20% 65%;
+
+    --sidebar-brand-bg: 217 91% 60%;
+    --sidebar-brand-text: 222 84% 5%;
+    /* ===== TitleBar ===== */
+    --titlebar-text: 215 20% 65%;
+    --titlebar-text-hover: 210 40% 96%;
+
+    --titlebar-btn-hover-bg: 0 0% 100% / 0.1;
+
+    --titlebar-accent: 217 91% 60%;
+    --titlebar-accent-hover: 217 91% 65%;
+
+    --titlebar-close-hover-bg: 0 72% 45%;
+    --titlebar-close-hover-text: 0 0% 100%;
+
+
+    
+  }
+
+  * {
+    @apply border-border;
+  }
+  
+body {
+  @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50;
+  @apply font-sans;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+  .dark body {
+    background-image: radial-gradient(rgb(51, 65, 85) 1.5px, transparent 1.5px);
+  }
+
+  html, body, #root {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* 防止出现双重滚动条 */
+  }
+  input, textarea, select {
+    @apply bg-transparent transition-colors duration-300 ease-in-out;
+  }
+  
+  /* 2. 针对 Webkit 自动填充（Autofill）的“屎黄色/白色”背景修复 */
+  /* 这通常是闪白的另一个元凶，浏览器会自动给记录过账号密码的框填白色背景 */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-transition: color 9999s ease-out, background-color 9999s ease-out;
+    -webkit-transition-delay: 9999s;
+    transition-delay: 9999s; /* 让背景色变色延迟到无限久，从而看起来像透明 */
+  }
+}

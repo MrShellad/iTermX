@@ -1,0 +1,59 @@
+@layer components {
+  
+  /* 1. 侧边栏/面板玻璃 (Sidebar) */
+  .glass-panel {
+    @apply bg-white/60 dark:bg-slate-900/60; /* 60% 透明度 */
+    @apply backdrop-blur-xl;                  /* 强模糊 */
+    @apply border-r border-white/20 dark:border-white/5;
+    /* 如果侧边栏是贴边的，通常不需要圆角，或者只在特定边缘加 */
+  }
+
+  /* 2. 液态玻璃卡片 (ServerCard, Modal) - 强制圆角 */
+  .glass-card {
+    /* [关键] 强制圆角，防止内容溢出切掉圆角 */
+    @apply rounded-xl overflow-hidden; 
+    
+    /* 玻璃质感 */
+    @apply bg-white/40 dark:bg-slate-900/40;
+    @apply backdrop-blur-md;
+    
+    /* 边框与高光 (液态感的来源) */
+    @apply border border-white/40 dark:border-white/10;
+    @apply shadow-sm transition-all duration-300;
+    
+    /* 内部高光环，模拟玻璃厚度 */
+    @apply ring-1 ring-inset ring-white/50 dark:ring-white/5;
+  }
+
+  /* 悬停时的液态流动感 */
+  .glass-card:hover {
+    @apply bg-white/60 dark:bg-slate-900/60;
+    @apply shadow-lg shadow-blue-500/10; 
+    @apply border-blue-200/50 dark:border-blue-500/30;
+    transform: translateY(-2px); 
+  }
+
+  /* 3. 玻璃输入框 (Search Input) - 强制圆角 */
+  .glass-input {
+    @apply rounded-lg; /* [关键] 圆角 */
+    @apply bg-white/50 dark:bg-slate-950/50;
+    @apply backdrop-blur-sm;
+    @apply border border-white/30 dark:border-white/10;
+    @apply shadow-inner;
+    @apply transition-colors;
+  }
+  .glass-input:focus {
+    @apply border-blue-400/50 bg-white/70 dark:bg-slate-900/70;
+    @apply ring-2 ring-blue-500/20;
+    outline: none;
+  }
+
+  /* 4. 玻璃按钮 - 强制圆角 */
+  .glass-btn {
+    @apply rounded-lg; /* [关键] 圆角 */
+    @apply bg-white/50 dark:bg-slate-800/50;
+    @apply border border-white/20 dark:border-white/5;
+    @apply hover:bg-white/80 dark:hover:bg-slate-700/80;
+    @apply active:scale-95 transition-all;
+  }
+}

@@ -1,0 +1,54 @@
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50;
+    @apply font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .dark body {
+    background-image: radial-gradient(rgb(51, 65, 85) 1.5px, transparent 1.5px);
+  }
+
+  html, body, #root {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  input, textarea, select {
+    @apply bg-transparent transition-colors duration-300 ease-in-out;
+  }
+
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-transition: color 9999s ease-out, background-color 9999s ease-out;
+    -webkit-transition-delay: 9999s;
+    transition-delay: 9999s;
+  }
+}
+/* 彻底隐藏 ScrollArea 的原生滚动条 */
+.hide-scrollbar [data-radix-scroll-area-viewport] {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE/Edge */
+}
+
+.hide-scrollbar [data-radix-scroll-area-viewport]::-webkit-scrollbar {
+  display: none !important; /* Chrome/Safari/Tauri */
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* 隐藏 Shadcn 默认生成的 ScrollBar 组件 */
+.hide-scrollbar [data-radix-scroll-area-scrollbar] {
+  display: none !important;
+  opacity: 0 !important;
+}

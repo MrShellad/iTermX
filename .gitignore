@@ -1,0 +1,57 @@
+# ========================
+# Node / Frontend
+# ========================
+node_modules/
+dist/
+dist-ssr/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ========================
+# Vite / Cache
+# ========================
+.vite/
+.cache/
+
+# ========================
+# Tauri / Rust
+# ========================
+src-tauri/target/
+src-tauri/gen/
+src-tauri/.cargo/
+src-tauri/tauri-dev.log
+
+# Cargo build cache (双保险)
+**/target/
+
+# ========================
+# Environment / Secrets
+# ========================
+.env
+.env.*
+!.env.example
+
+# ========================
+# IDE / OS
+# ========================
+.vscode/settings.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# ========================
+# Certificates / Keys (非常重要)
+# ========================
+*.pfx
+*.cer
+*.pem
+*.key
+*.keystore
+
+# ========================
+# Misc
+# ========================
+coverage/
