@@ -25,3 +25,11 @@ iTermX 是一款基于 **Tauri + Rust** 构建的跨平台桌面终端应用，�
 pnpm install
 pnpm tauri dev
 ****
+
+Copyright © 2026 MrShellad
+
+All rights reserved.
+
+This project is currently not open source.
+You may not copy, modify, distribute, or publish this software
+without explicit permission from the author.
