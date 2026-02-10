@@ -1,0 +1,15 @@
+@import "./tailwind.css";
+
+@import "./theme/index.css";
+
+@import "./base/global.css";
+@import "./base/scrollbar.css";
+
+@import "./components/glass.css";
+
+@import "./tauri.css";
+
+@import "./components/common/interactive-card.css";
+@import "./components/server/server-general-info.css";
+@import "./components/common/input-modal.css";
+@import "./components/terminal/xterm.css";
