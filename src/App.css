@@ -1,3 +1,4 @@
+
 /* src/App.css */
 
 /* 确保根节点撑满屏幕 */
@@ -19,4 +20,8 @@
 }
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
+}
+/* 强制 xterm 渲染容器使用安卓系统自带的等宽字体 */
+.xterm-viewport, .xterm-rows {
+  font-family: "Menlo", "Monaco", "Courier New", "Ubuntu Mono", monospace !important;
 }
