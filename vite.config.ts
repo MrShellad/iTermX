@@ -1,11 +1,11 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
-import { fileURLToPath } from "url"; // 🟢 新增：用于兼容 ESM 环境
+import { fileURLToPath } from "url"; // 🟢 1. 引入这个工具
 
 const host = process.env.TAURI_DEV_HOST;
 
-// 🟢 兼容 ESM 环境获取 __dirname
+// 🟢 2. 手动模拟生成 __dirname (ESM 模式必备)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -15,17 +15,17 @@ export default defineConfig(async () => ({
 
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "src"), // 现在这里是安全的了
+      // 🟢 3. 现在这里可以使用 __dirname 了
+      "@": path.resolve(__dirname, "src"),
     },
   },
 
-  // 🟢 显式指定构建输出目录（必须是 dist，对应 tauri.conf.json 的 ../dist）
+  // 🟢 4. 显式指定输出目录，防止路径错乱
   build: {
-    outDir: "dist",
-    emptyOutDir: true, // 构建前清空 dist，防止旧文件干扰
+    outDir: "dist", 
+    emptyOutDir: true,
   },
 
-  // Vite options tailored for Tauri development
   clearScreen: false,
 
   server: {
