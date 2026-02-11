@@ -285,6 +285,11 @@ export const zh = {
       "loading": "加载中…",
       "empty": "-"
     },
+      process: {
+      title: "进程监控",
+      total: "进程总数",
+      name: "进程名称"
+    },
       "cpu": {
       "title": "CPU 处理器",
       "model": "处理器型号",
@@ -322,11 +327,13 @@ export const zh = {
         timezone: "时区"
       },
       network: {
-        title: "网络流量",
-        details: "网卡接口详情",
-        realtime: "实时网速",
-        total: "总计"
-      }
+        title: "网络监控",
+        tcp_conns: "TCP 连接数",
+        realtime: "实时速率",
+        rx_total: "接收总流量",
+        tx_total: "发送总流量",
+        interfaces: "网卡详情"
+    }
     },
 keys: {
   empty: "未找到密钥",
