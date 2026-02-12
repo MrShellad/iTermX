@@ -2,82 +2,77 @@ import { useState, useEffect } from 'react';
 import { 
     ArrowLeft, ArrowRight, ArrowUp, RotateCw, 
     Upload, Eye, EyeOff, ArrowRightLeft, 
-    CheckCircle2, XCircle, Loader2 
+    CheckCircle2, XCircle, Loader2,
+    ShieldAlert, User, FolderLock,
+    Magnet // 🟢 新增磁铁图标
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { clsx } from 'clsx';
 import { useFileStore } from '@/store/useFileStore';
 import { useTransferStore } from '@/store/useTransferStore';
 import { GlassTooltip } from '@/components/common/GlassTooltip';
-// [核心] 引入 Action Hook
 import { useFileActions } from '../hooks/useFileActions';
+import { isSensitivePath } from '../utils/security';
 
 interface Props {
   sessionId: string;
+  username?: string;
 }
 
-export const FsTopBar = ({ sessionId }: Props) => {
+export const FsTopBar = ({ sessionId, username }: Props) => {
   const { t } = useTranslation();
   
-  // 1. 文件系统 Store：用于导航和状态读取
   const { 
-    getSession, 
-    setPath, 
-    goBack, 
-    goForward, 
-    goUp, 
-    toggleHidden 
+    getSession, setPath, goBack, goForward, goUp, toggleHidden,
+    toggleTracking // 🟢 获取切换方法
   } = useFileStore();
 
-  // 2. 传输列表 Store：用于开关传输面板
   const { toggleOpen: toggleTransfer } = useTransferStore();
 
-  // 3. [核心] 动作 Hook：用于上传、刷新和获取反馈状态
   const { 
-    handleUpload, 
-    executeAction, // 用于触发 refresh
-    isSubmitting,  // 上传时的 Loading 状态
-    toastMessage   // 上传结果的 Toast 提示
+    handleUpload, executeAction, isSubmitting, toastMessage 
   } = useFileActions(sessionId);
   
-  // 获取当前 Session 状态
   const sessionState = getSession(sessionId);
-  const { currentPath, showHidden } = sessionState;
+  const { currentPath, showHidden, isTracking } = sessionState; // 🟢 获取 isTracking 状态
 
-  // 本地输入框状态 (用于地址栏编辑)
   const [inputPath, setInputPath] = useState(currentPath);
+  const [isFocused, setIsFocused] = useState(false);
 
-  // 当外部路径变化时，同步更新输入框
+  const isSensitive = isSensitivePath(currentPath);
+
   useEffect(() => {
     setInputPath(currentPath);
   }, [currentPath]);
 
-  // 地址栏回车跳转
   const handlePathSubmit = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       setPath(sessionId, inputPath);
+      (e.target as HTMLInputElement).blur();
     }
   };
 
-  const btnClass = "p-1.5 hover:bg-slate-200 dark:hover:bg-slate-800 rounded transition-colors text-slate-600 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed";
+  const btnClass = "p-1.5 hover:bg-slate-200 dark:hover:bg-slate-800 rounded transition-colors text-slate-600 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center";
 
   return (
-    <div className="flex items-center gap-2 p-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 relative">
+    <div className="flex items-center gap-2 p-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 relative select-none">
       
-      {/* --- Toast 提示区域 (用于显示上传/刷新反馈) --- */}
+      {/* --- Toast 反馈提示 --- */}
       {toastMessage && (
-          <div className={`absolute top-12 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-full shadow-lg text-xs flex items-center gap-2 animate-in slide-in-from-top-2 fade-in duration-300 border ${
+          <div className={clsx(
+              "absolute top-14 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-full shadow-xl text-xs flex items-center gap-2 animate-in slide-in-from-top-2 fade-in duration-200 border pointer-events-none",
               toastMessage.type === 'error' 
-                ? 'bg-red-50 border-red-200 text-red-700 dark:bg-red-900/80 dark:border-red-800 dark:text-red-100' 
-                : 'bg-white border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200'
-          }`}>
+                ? 'bg-red-50 border-red-200 text-red-700 dark:bg-red-900/90 dark:border-red-800 dark:text-red-100' 
+                : 'bg-white border-slate-200 text-slate-700 dark:bg-slate-800/90 dark:border-slate-700 dark:text-slate-200'
+          )}>
               {toastMessage.type === 'error' ? <XCircle className="w-4 h-4"/> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
               {toastMessage.msg}
           </div>
       )}
 
       {/* --- 1. 导航按钮组 --- */}
-      <div className="flex items-center gap-1">
-        <GlassTooltip content={t('fs.nav.back')}>
+      <div className="flex items-center gap-1 shrink-0">
+        <GlassTooltip content={t('fs.nav.back', 'Back')} side="bottom">
             <button 
                 onClick={() => goBack(sessionId)} 
                 className={btnClass}
@@ -87,7 +82,7 @@ export const FsTopBar = ({ sessionId }: Props) => {
             </button>
         </GlassTooltip>
         
-        <GlassTooltip content={t('fs.nav.forward')}>
+        <GlassTooltip content={t('fs.nav.forward', 'Forward')} side="bottom">
             <button 
                 onClick={() => goForward(sessionId)} 
                 className={btnClass}
@@ -97,43 +92,106 @@ export const FsTopBar = ({ sessionId }: Props) => {
             </button>
         </GlassTooltip>
 
-        <GlassTooltip content={t('fs.nav.up')}>
+        <GlassTooltip content={t('fs.nav.up', 'Up Level')} side="bottom">
             <button onClick={() => goUp(sessionId)} className={btnClass}>
                 <ArrowUp className="w-4 h-4" />
             </button>
         </GlassTooltip>
+
       </div>
 
       {/* --- 2. 地址栏 --- */}
-      <div className="flex-1 mx-2">
+      <div className={clsx(
+          "flex-1 flex items-center px-3 py-1.5 rounded-md border transition-all duration-300 relative overflow-hidden mx-2",
+          isSensitive 
+              ? "bg-red-50/80 dark:bg-red-900/20 border-red-200 dark:border-red-800" 
+              : "bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 focus-within:ring-2 focus-within:ring-blue-500/20"
+      )}>
+        {isSensitive && (
+            <div className="mr-2 text-red-500 animate-in fade-in zoom-in duration-300 shrink-0">
+                <FolderLock className="w-4 h-4" />
+            </div>
+        )}
+
         <input 
           type="text"
           value={inputPath}
           onChange={(e) => setInputPath(e.target.value)}
           onKeyDown={handlePathSubmit}
-          className="w-full px-3 py-1.5 text-sm bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded transition-colors focus:ring-2 focus:ring-blue-500 outline-none font-mono text-slate-700 dark:text-slate-200"
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => {
+              setIsFocused(false);
+              setInputPath(currentPath);
+          }}
+          className={clsx(
+              "w-full bg-transparent text-sm outline-none font-mono min-w-0 transition-colors",
+              isSensitive 
+                  ? "text-red-700 dark:text-red-200 placeholder:text-red-400 selection:bg-red-200 dark:selection:bg-red-900" 
+                  : "text-slate-700 dark:text-slate-200"
+          )}
+          spellCheck={false}
         />
+
+        {/* 敏感文字提示 */}
+        {isSensitive && !isFocused && (
+            <span className="text-[10px] uppercase font-bold text-red-500/70 select-none ml-2 tracking-wider hidden sm:block whitespace-nowrap">
+                {t('fs.nav.protected', 'System Protected')}
+            </span>
+        )}
       </div>
 
-      {/* --- 3. 功能按钮组 --- */}
-      <div className="flex items-center gap-1">
+      {/* --- 3. 身份标签 --- */}
+      {username && (
+        <div className={clsx(
+            "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-medium shrink-0 select-none mr-1 transition-colors",
+            username === 'root' 
+                ? "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400"
+                : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400"
+        )} title={username}>
+            {username === 'root' ? <ShieldAlert className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
+            <span className="truncate max-w-[120px]">
+                {username}
+            </span>
+        </div>
+      )}
+
+      {/* --- 4. 功能按钮组 --- */}
+      <div className="flex items-center gap-1 shrink-0">
         
-        {/* [功能 1] 刷新 */}
-        <GlassTooltip content={t('fs.action.refresh')}>
+        {/* 🟢 [新增] 目录跟随开关 */}
+        <GlassTooltip 
+            content={isTracking ? t('fs.action.trackingOn', 'Sync: ON') : t('fs.action.trackingOff', 'Sync: OFF')} 
+            side="bottom"
+        >
             <button 
-                onClick={() => executeAction('refresh')} // 使用 action 统一管理
+                onClick={() => toggleTracking(sessionId)}
+                className={clsx(
+                    btnClass, 
+                    isTracking 
+                        ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400" 
+                        : "opacity-70 hover:opacity-100"
+                )}
+            >
+                <Magnet className={clsx("w-4 h-4 transition-transform duration-300", isTracking && "rotate-180")} />
+            </button>
+        </GlassTooltip>
+
+        <div className="w-px h-4 bg-slate-300 dark:bg-slate-700 mx-1" />
+
+        <GlassTooltip content={t('fs.action.refresh', 'Refresh')} side="bottom">
+            <button 
+                onClick={() => executeAction('refresh')} 
                 className={btnClass}
             >
                 <RotateCw className="w-4 h-4" />
             </button>
         </GlassTooltip>
         
-        {/* [功能 2] 上传 */}
-        <GlassTooltip content={t('fs.action.upload')}>
+        <GlassTooltip content={t('fs.action.upload', 'Upload File')} side="bottom">
             <button 
                 className={btnClass} 
-                onClick={handleUpload} // 调用上传 Hook
-                disabled={isSubmitting} // 上传中禁用
+                onClick={handleUpload}
+                disabled={isSubmitting}
             >
                 {isSubmitting ? (
                     <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
@@ -143,11 +201,13 @@ export const FsTopBar = ({ sessionId }: Props) => {
             </button>
         </GlassTooltip>
         
-        {/* [功能 3] 显示/隐藏文件 */}
-        <GlassTooltip content={showHidden ? t('fs.view.hideHidden') : t('fs.view.showHidden')}>
+        <GlassTooltip 
+            content={showHidden ? t('fs.view.hideHidden', 'Hide Hidden Files') : t('fs.view.showHidden', 'Show Hidden Files')} 
+            side="bottom"
+        >
             <button 
                 onClick={() => toggleHidden(sessionId)} 
-                className={`${btnClass} ${showHidden ? 'bg-slate-200 dark:bg-slate-800' : ''}`} // 激活状态加深背景
+                className={clsx(btnClass, showHidden && 'bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-100')}
             >
                 {showHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
@@ -155,11 +215,10 @@ export const FsTopBar = ({ sessionId }: Props) => {
 
         <div className="w-px h-4 bg-slate-300 dark:bg-slate-700 mx-1" />
 
-        {/* [功能 4] 传输管理面板开关 */}
-        <GlassTooltip content={t('fs.transfer.manager')}>
+        <GlassTooltip content={t('fs.transfer.manager', 'Transfers')} side="bottom">
             <button 
                 onClick={toggleTransfer}
-                className="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded text-blue-600 dark:text-blue-400 transition-colors"
+                className="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded text-blue-600 dark:text-blue-400 transition-colors flex items-center justify-center"
             >
                 <ArrowRightLeft className="w-4 h-4" />
             </button>

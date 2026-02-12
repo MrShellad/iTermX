@@ -7,13 +7,15 @@ import { useTerminalStore } from "@/store/useTerminalStore";
 
 export const useFileManager = (sessionId?: string) => {
   const { 
-    getSession, initSession, setFiles, setLoading: setStoreLoading
+    getSession, 
+    initSession, 
+    setFiles, 
+    setLoading: setStoreLoading,
+    setPath // 🟢 [修改 1] 从 Store 中解构出 setPath
   } = useFileStore();
 
-  // [修正 1] 直接使用 sessionId 作为通信 ID (保持不变，这是修复 SFTP 连不上的关键)
   const connectionId = sessionId;
 
-  // 依然保留这个检查，确保 Session 在 Store 中存在
   const isValidSession = useTerminalStore(state => 
      sessionId ? !!state.sessions[sessionId] : false
   );
@@ -42,6 +44,28 @@ export const useFileManager = (sessionId?: string) => {
     }
   }, [sessionId, initSession]);
 
+  // =================================================================
+  // 🟢 [修改 2] 新增：初始化时自动获取并跳转到家目录
+  // =================================================================
+  useEffect(() => {
+    // 只有在连接就绪，且当前处于默认根目录 '/' 时才触发
+    if (sessionId && isConnectionReady && currentPath === '/') {
+        invoke<string>('sftp_get_home_dir', { id: sessionId })
+            .then((homePath) => {
+                // 如果获取到了家目录，且不是根目录，则更新路径
+                // 这会自动触发下面的 fetchFiles，从而加载家目录文件
+                if (homePath && homePath !== '/') {
+                    // console.log("🏠 Home directory detected:", homePath);
+                    setPath(sessionId, homePath);
+                }
+            })
+            .catch(err => {
+                // 获取失败不阻断，只是停留在 /
+                console.warn("Failed to detect home directory:", err);
+            });
+    }
+  }, [sessionId, isConnectionReady, currentPath, setPath]);
+
   const fetchFiles = useCallback(async () => {
     if (!sessionId || !connectionId || !isValidSession) return;
     
@@ -49,11 +73,8 @@ export const useFileManager = (sessionId?: string) => {
     setError(null);
 
     try {
-      // =========================================================
-      // 🛑 [核心修复] 将命令名改回 "list_ssh_files"
-      // =========================================================
       const files = await invoke<FileEntry[]>("list_ssh_files", { 
-          id: connectionId, // ID 依然传 UUID
+          id: connectionId,
           path: currentPath
       });
       

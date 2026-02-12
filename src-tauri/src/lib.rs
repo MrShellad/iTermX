@@ -19,10 +19,7 @@ use tauri_plugin_autostart::MacosLauncher;
 // ================================
 // 引入 Server 相关命令
 // ================================
-use commands::fs::{
-    list_ssh_files, sftp_copy, sftp_create_file, sftp_delete, sftp_download_file, sftp_mkdir,
-    sftp_rename, sftp_upload_file,sftp_chmod,sftp_write_file,sftp_read_file,
-};
+use commands::fs::*;
 use commands::server::*;
 use commands::backup::*;
 // ================================
@@ -198,7 +195,8 @@ pub fn run() {
             sftp_chmod,
             sftp_read_file,
             sftp_write_file,
-            
+            sftp_check_is_dir,
+            sftp_get_home_dir,
             // 密钥管理 (Vault)
             init_vault,
             unlock_vault,

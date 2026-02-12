@@ -9,6 +9,8 @@ import { useServerStore } from "@/features/server/application/useServerStore";
 import { useSettingsStore } from "@/features/settings/application/useSettingsStore";
 import { TERMINAL_THEMES } from "../constants";
 import { useSessionCredentialStore } from "@/store/useSessionCredentialStore";
+// 🟢 [新增] 引入文件存储，用于目录跟随
+import { useFileStore } from "@/store/useFileStore";
 
 // 防抖工具
 function debounce(func: Function, wait: number) {
@@ -25,6 +27,9 @@ export const useTerminalSession = (sessionId: string, isActive: boolean) => {
   const fitAddonRef = useRef<FitAddon | null>(null);
   const rendererAddonRef = useRef<any>(null);
   
+  // 🟢 [新增] 用于路径跟随防抖的 Ref
+  const trackingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // 连接状态锁
   const isConnectionReadyRef = useRef(false);
   
@@ -44,6 +49,9 @@ export const useTerminalSession = (sessionId: string, isActive: boolean) => {
   const settings = useSettingsStore(s => s.settings);
   const customThemes = useSettingsStore(s => s.customThemes);
   
+  // 🟢 [新增] 获取文件系统操作方法
+  const { getSession, setPath } = useFileStore();
+
   // 样式配置
   const themeId = settings['terminal.theme'] || 'default';
   const rendererType = settings['terminal.rendererType'] || 'webgl';
@@ -250,7 +258,7 @@ export const useTerminalSession = (sessionId: string, isActive: boolean) => {
     }
   }, [rendererType]);
 
-  // 5. 🟢 [修复] 外观配置实时同步 (Hot Reload)
+  // 5. 外观配置实时同步 (Hot Reload)
   useEffect(() => {
     const term = termRef.current;
     if (!term) return;
@@ -272,10 +280,76 @@ export const useTerminalSession = (sessionId: string, isActive: boolean) => {
   }, [
     fontSize, fontFamily, fontWeight, lineHeight, 
     cursorBlink, cursorStyle, scrollback, themeObj, 
-    padding // 👈 监听 padding 变化触发重绘
+    padding
   ]);
 
-  // 6. Tab 激活自动聚焦
+  // 6. 🟢 [核心新增] 终端目录跟随逻辑 (Terminal Follow)
+  useEffect(() => {
+    const term = termRef.current;
+    if (!term || !serverConfig) return;
+
+    // Handle title change events (OSC 0/1/2)
+    const handleTitleChange = (newTitle: string) => {
+        // console.log("Terminal Title Changed:", newTitle); // Debugging
+        
+        // 1. Check if tracking is enabled
+        const fileSession = getSession(sessionId);
+        if (!fileSession?.isTracking) return;
+
+        // 2. Debounce to avoid spamming requests on fast output
+        if (trackingTimeoutRef.current) clearTimeout(trackingTimeoutRef.current);
+
+        trackingTimeoutRef.current = setTimeout(async () => {
+            let detectedPath = "";
+
+            // 3. Parse Path
+            // 🟢 [FIX] Changed `+` to `*` at the end
+            // Old: ...[a-zA-Z0-9_\-\.\/]+)/  <- Required chars after / or ~
+            // New: ...[a-zA-Z0-9_\-\.\/]*)/  <- Allows bare ~ or /
+            const pathRegex = /(?::\s*)?((?:\/|~)[a-zA-Z0-9_\-\.\/]*)/;
+            const match = newTitle.match(pathRegex);
+
+            if (match && match[1]) {
+                detectedPath = match[1].trim();
+            }
+
+            // Expand Tilde (~) to Home Directory
+            if (detectedPath.startsWith('~')) {
+                const homeDir = serverConfig.username === 'root' ? '/root' : `/home/${serverConfig.username}`;
+                // Use strict replacement for the start of the string
+                detectedPath = detectedPath.replace(/^~/, homeDir);
+            }
+
+            // 4. Validate and Sync
+            // Only proceed if path is valid and different from current
+            if (detectedPath && detectedPath !== fileSession.currentPath) {
+                try {
+                    // Backend validation: check if path exists and is a directory
+                    const isDir = await invoke<boolean>('sftp_check_is_dir', { 
+                        id: sessionId, 
+                        path: detectedPath 
+                    });
+                    
+                    if (isDir) {
+                        // console.log(`[Tracking] Syncing to: ${detectedPath}`);
+                        setPath(sessionId, detectedPath);
+                    }
+                } catch (e) {
+                    // Silent failure: path might not exist or be a file
+                }
+            }
+        }, 600); // 600ms delay
+    };
+
+    const titleDisposable = term.onTitleChange(handleTitleChange);
+
+    return () => {
+        titleDisposable.dispose();
+        if (trackingTimeoutRef.current) clearTimeout(trackingTimeoutRef.current);
+    };
+  }, [sessionId, serverConfig, getSession, setPath]);
+
+  // 7. Tab 激活自动聚焦
   useEffect(() => {
     if (isActive && termRef.current) {
         const timer = setTimeout(() => {

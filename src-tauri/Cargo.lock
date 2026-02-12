@@ -3,6 +3,42 @@
 version = 4
 
 [[package]]
+name = "PiTerm"
+version = "1.0.1"
+dependencies = [
+ "aes-gcm",
+ "base64 0.21.7",
+ "chrono",
+ "font-kit",
+ "hmac",
+ "pbkdf2 0.12.2",
+ "rand 0.8.5",
+ "regex",
+ "reqwest 0.11.27",
+ "serde",
+ "serde_json",
+ "sha2",
+ "sqlx",
+ "ssh2",
+ "sysinfo",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-autostart",
+ "tauri-plugin-clipboard-manager",
+ "tauri-plugin-dialog",
+ "tauri-plugin-fs",
+ "tauri-plugin-opener",
+ "tauri-plugin-os",
+ "tauri-plugin-shell",
+ "tauri-plugin-sql",
+ "tokio",
+ "urlencoding",
+ "uuid",
+ "walkdir",
+ "zip",
+]
+
+[[package]]
 name = "adler2"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2160,42 +2196,6 @@ dependencies = [
  "tokio",
  "tower-service",
  "tracing",
-]
-
-[[package]]
-name = "iTermX"
-version = "1.0.1"
-dependencies = [
- "aes-gcm",
- "base64 0.21.7",
- "chrono",
- "font-kit",
- "hmac",
- "pbkdf2 0.12.2",
- "rand 0.8.5",
- "regex",
- "reqwest 0.11.27",
- "serde",
- "serde_json",
- "sha2",
- "sqlx",
- "ssh2",
- "sysinfo",
- "tauri",
- "tauri-build",
- "tauri-plugin-autostart",
- "tauri-plugin-clipboard-manager",
- "tauri-plugin-dialog",
- "tauri-plugin-fs",
- "tauri-plugin-opener",
- "tauri-plugin-os",
- "tauri-plugin-shell",
- "tauri-plugin-sql",
- "tokio",
- "urlencoding",
- "uuid",
- "walkdir",
- "zip",
 ]
 
 [[package]]

@@ -5,7 +5,7 @@ import { TransferManager } from "@/features/fs/components/TransferManager";
 
 // Hooks
 import { useFileManager } from "@/features/terminal/hooks/useFileManager";
-// 引入 Store 仅用于校验会话有效性，不用于传参替换
+// 引入 Store
 import { useTerminalStore } from "@/store/useTerminalStore";
 import { useServerStore } from "@/features/server/application/useServerStore";
 
@@ -24,19 +24,20 @@ interface Props {
 }
 
 export const FileManagerPanel = ({ sessionId }: Props) => {
-  // 1. 校验逻辑：仅用于判断是否显示 "NoSessionView"
+  // 1. 获取会话和服务器配置
   const session = useTerminalStore(state => 
     sessionId ? state.sessions[sessionId] : undefined
   );
+  
+  // 🟢 从 useServerStore 中查找当前连接对应的服务器配置
+  // 您的 Store 结构支持通过 ID 查找，且 server 对象包含 username 和 ip
   const serverConfig = useServerStore(state => 
     state.servers.find(s => s.id === session?.serverId)
   );
 
   const isValid = sessionId && session && serverConfig;
   
-  // 2. [核心修正] 必须传 sessionId (前端 Tab ID) 给 Hook
-  // Hook 内部会自动反查 Connection ID 用于后端通信
-  // 如果传 connectionId，会导致多个 Tab 状态冲突，且 Hook 内部查找 Session 会失败
+  // 2. File Manager Hook
   const { 
     isConnectionReady, 
     hasFiles, 
@@ -65,12 +66,16 @@ export const FileManagerPanel = ({ sessionId }: Props) => {
   return (
     <div className="h-full w-full flex flex-col bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 relative overflow-hidden">
         
-        {/* 顶部工具栏 - 传 sessionId */}
+        {/* 顶部工具栏 */}
         <div className="shrink-0 z-10">
-            <FsTopBar sessionId={sessionId} />
+            {/* 🟢 [核心修改] 将用户信息传给 FsTopBar */}
+            <FsTopBar 
+                sessionId={sessionId} 
+                username={serverConfig.username} // 例如 "root" 或 "ubuntu"
+            />
         </div>
 
-        {/* 文件列表容器 - 传 sessionId */}
+        {/* 文件列表容器 */}
         <div className="flex-1 min-h-0 relative flex flex-col">
             {isLoading && <LoadingOverlay />}
             
@@ -79,7 +84,7 @@ export const FileManagerPanel = ({ sessionId }: Props) => {
             <FileList sessionId={sessionId} />
         </div>
 
-        {/* 传输管理器 (全局组件，其实不需要传 ID，或是内部处理) */}
+        {/* 传输管理器 */}
         <TransferManager />
     </div>
   );

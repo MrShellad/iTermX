@@ -4,23 +4,24 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/xxx.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>iTermX</title>
+    <title>PiTerm</title>
 
     <style>
       /* 启动占位屏 */
       #splash {
-        position: fixed;
-        inset: 0;
-        background: #0f172a; /* 深色背景，避免白闪 */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-      }
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
 
       #splash img {
-        width: 96px;
-        height: 96px;
+        width: 196px;
+        height: 196px;
         animation: splash-fade-in 0.6s ease-out;
       }
 
@@ -40,7 +41,7 @@
   <body>
     <!-- 启动占位屏 -->
     <div id="splash">
-      <img src="/start.svg" alt="start" />
+      <img src="/logo.png" alt="start" />
     </div>
 
     <!-- React 根节点 -->

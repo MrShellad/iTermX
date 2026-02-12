@@ -3,7 +3,7 @@ import { format } from "date-fns";
 // 🟢 [新增] 引入中文语言包
 import { zhCN } from "date-fns/locale";
 // 🟢 [新增] 引入本地 Logo
-import Logo from "@/assets/logo_dark.svg";
+import Logo from "@/assets/logo.png";
 import { cn } from "@/lib/utils"; // 假设你有这个工具函数，如果没有可以直接写在 className 里
 
 export const DashboardHeader = () => {
@@ -28,18 +28,17 @@ export const DashboardHeader = () => {
         {/* Logo 部分 */}
         <div className="flex items-center gap-3">
             {/* 🟢 [修改] 替换为图片 Logo */}
-            <div className="w-10 h-10 flex items-center justify-center">
+            <div className="w-16 h-16 flex items-center justify-center">
                 <img 
                     src={Logo} 
-                    alt="iTermX Logo" 
+                    alt="PiTerm Logo" 
                     className="w-full h-full object-contain drop-shadow-sm" 
                 />
             </div>
             
             <div className="text-left">
-                {/* 🟢 [修改] 名字改为 iTermX */}
                 <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 tracking-tight">
-                    iTermX
+                    PiTerm
                 </h1>
                 <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 tracking-widest uppercase">
                     Terminal

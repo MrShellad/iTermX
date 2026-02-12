@@ -7,7 +7,6 @@ export interface ClipboardState {
   sourcePath: string;
 }
 
-// [新增] 定义缓存结构
 interface FileCache {
   [path: string]: {
     data: FileEntry[];
@@ -15,7 +14,6 @@ interface FileCache {
   };
 }
 
-// [常量] 缓存有效期，例如 5 分钟 (300000ms)
 const CACHE_DURATION = 300000;
 
 interface SessionFileState {
@@ -29,8 +27,9 @@ interface SessionFileState {
   showHidden: boolean;
   reloadTrigger: number;
   clipboard: ClipboardState | null;
-  // [新增] 缓存字段
-  cache: FileCache; 
+  cache: FileCache;
+  // 🟢 [新增] 标记是否开启终端目录跟随
+  isTracking: boolean;
 }
 
 const defaultSessionState: SessionFileState = {
@@ -44,7 +43,9 @@ const defaultSessionState: SessionFileState = {
   showHidden: false,
   reloadTrigger: 0,
   clipboard: null,
-  cache: {}, // [新增] 默认空缓存
+  cache: {},
+  // 🟢 [新增] 默认不开启
+  isTracking: true,
 };
 
 interface FileStore {
@@ -52,10 +53,7 @@ interface FileStore {
   
   triggerReload: (sessionId: string) => void; 
   initSession: (sessionId: string) => void;
-  
-  // [修改] setPath 现在负责判断缓存逻辑
   setPath: (sessionId: string, path: string) => void;
-  
   setFiles: (sessionId: string, files: FileEntry[]) => void;
   setLoading: (sessionId: string, loading: boolean) => void;
   goBack: (sessionId: string) => void;
@@ -65,9 +63,10 @@ interface FileStore {
   setSort: (sessionId: string, field: SortField) => void;
   getSession: (sessionId: string) => SessionFileState;
   setClipboard: (sessionId: string, clipboard: ClipboardState | null) => void;
-  
-  // [新增] 专门用于清理缓存（例如刷新时强制清理）
   clearCache: (sessionId: string, path: string) => void;
+  
+  // 🟢 [新增] 切换跟随状态
+  toggleTracking: (sessionId: string) => void;
 }
 
 export const useFileStore = create<FileStore>((set, get) => ({
@@ -78,7 +77,6 @@ export const useFileStore = create<FileStore>((set, get) => ({
   },
 
   triggerReload: (sessionId) => {
-    // 刷新时，除了增加 trigger，最好也清理当前路径的缓存，强制重新请求
     const session = get().sessions[sessionId];
     if (session) {
         get().clearCache(sessionId, session.currentPath);
@@ -105,7 +103,20 @@ export const useFileStore = create<FileStore>((set, get) => ({
     };
   }),
 
-  // [修改] setFiles：不仅更新当前文件列表，还写入缓存
+  // 🟢 [新增] 切换跟随状态实现
+  toggleTracking: (sessionId) => set((state) => {
+      const session = state.sessions[sessionId] || defaultSessionState;
+      return {
+          sessions: {
+              ...state.sessions,
+              [sessionId]: {
+                  ...session,
+                  isTracking: !session.isTracking
+              }
+          }
+      };
+  }),
+
   setFiles: (sessionId, files) => set((state) => {
     const session = state.sessions[sessionId] || defaultSessionState;
     return {
@@ -115,7 +126,6 @@ export const useFileStore = create<FileStore>((set, get) => ({
           ...session,
           files,
           isLoading: false,
-          // [核心] 更新缓存
           cache: {
             ...session.cache,
             [session.currentPath]: { data: files, timestamp: Date.now() }
@@ -125,7 +135,6 @@ export const useFileStore = create<FileStore>((set, get) => ({
     };
   }),
 
-  // [新增] 专门用于清理指定路径的缓存
   clearCache: (sessionId, path) => set((state) => {
       const session = state.sessions[sessionId];
       if (!session) return {};
@@ -149,14 +158,11 @@ export const useFileStore = create<FileStore>((set, get) => ({
     }
   })),
   
-  // [核心修改] setPath 逻辑优化
   setPath: (sessionId, path) => set((state) => {
       const session = state.sessions[sessionId] || defaultSessionState;
-      if (session.currentPath === path) return {}; // 避免重复跳转
+      if (session.currentPath === path) return {}; 
 
       const newHistory = [...session.history.slice(0, session.historyIndex + 1), path];
-
-      // [核心优化] 检查缓存
       const cached = session.cache[path];
       const isCacheValid = cached && (Date.now() - cached.timestamp < CACHE_DURATION);
 
@@ -168,11 +174,8 @@ export const useFileStore = create<FileStore>((set, get) => ({
             currentPath: path,
             history: newHistory,
             historyIndex: newHistory.length - 1,
-            
-            // [关键] 如果缓存有效，直接使用缓存文件，且不进入 loading
-            // 如果缓存无效，先保留旧文件(或空)，并设为 loading
-            files: isCacheValid ? cached.data : (session.files), // 这里可以保留旧files防止闪白，或者 []
-            isLoading: !isCacheValid, // 只有没缓存时才 Loading
+            files: isCacheValid ? cached.data : (session.files), 
+            isLoading: !isCacheValid, 
           }
         }
       };
@@ -191,7 +194,6 @@ export const useFileStore = create<FileStore>((set, get) => ({
       const newIndex = session.historyIndex - 1;
       const path = session.history[newIndex];
       
-      // [Back 逻辑同样应用缓存策略]
       const cached = session.cache[path];
       const isCacheValid = cached && (Date.now() - cached.timestamp < CACHE_DURATION);
 
@@ -215,7 +217,6 @@ export const useFileStore = create<FileStore>((set, get) => ({
       const newIndex = session.historyIndex + 1;
       const path = session.history[newIndex];
 
-      // [Forward 逻辑同样应用缓存策略]
       const cached = session.cache[path];
       const isCacheValid = cached && (Date.now() - cached.timestamp < CACHE_DURATION);
 

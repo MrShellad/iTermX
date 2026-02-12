@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 
 // 引入本地 Logo
-import StartLogo from "@/assets/logo.svg";
+import Logo from "@/assets/logo.png";
 
 type MenuItem = {
   path: string;
@@ -192,7 +192,7 @@ export const Sidebar = () => {
         <div className="flex items-center font-bold text-lg overflow-hidden w-full">
           <div className="flex items-center justify-center w-12 h-12 shrink-0">
             {/* 🟢 [修改] 移除了背景色容器，直接显示图片，并调整大小为 w-8 h-8 */}
-            <img src={StartLogo} alt="Logo" className="w-8 h-8 object-contain" />
+            <img src={Logo} alt="Logo" className="w-16 h-16 object-contain" />
           </div>
         </div>
       </div>

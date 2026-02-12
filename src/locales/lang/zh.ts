@@ -384,6 +384,7 @@ keys: {
   },
     fs: {
       nav: {
+        protected: "系统保护",
         back: "后退",
         forward: "前进",
         up: "返回上一级"
@@ -460,7 +461,9 @@ keys: {
       action: {
         refresh: "刷新",
         upload: "上传文件",
-        cancel: "取消"
+        cancel: "取消",
+        trackingOn: "目录跟随开",
+        trackingOff: "目录跟随关",
       },
       view: {
         showHidden: "显示隐藏文件",

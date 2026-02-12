@@ -1,8 +1,8 @@
-# iTermX
+# PiTerm
 
-iTermX 是一款基于 **Tauri + Rust** 构建的跨平台桌面终端应用，前端使用 **xterm.js** 实现高性能终端渲染，旨在提供轻量、安全、可扩展的本地 Shell 体验。
+PiTerm 是一款基于 **Tauri + Rust** 构建的跨平台桌面终端应用，前端使用 **xterm.js** 实现高性能终端渲染，旨在提供轻量、安全、可扩展的本地 Shell 体验。
 
-与传统 Electron 终端应用不同，iTermX 通过 Tauri 将 Web UI 与原生能力紧密结合，在保持现代化界面体验的同时，大幅降低资源占用，并强化对系统权限与安全边界的控制。
+与传统 Electron 终端应用不同，PiTerm 通过 Tauri 将 Web UI 与原生能力紧密结合，在保持现代化界面体验的同时，大幅降低资源占用，并强化对系统权限与安全边界的控制。
 
 ## 核心特性
 
@@ -26,7 +26,7 @@ pnpm install
 pnpm tauri dev
 ****
 
-Copyright © 2026 MrShellad
+## Copyright © 2026 MrShellad
 
 All rights reserved.
 
