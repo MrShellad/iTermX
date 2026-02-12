@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Highlighter, Edit2, Plus } from "lucide-react";
-// 🟢 [修改] 引入公共组件
+import { Highlighter, Edit2, Plus, FileText } from "lucide-react";
 import { BaseModal } from "@/components/common/BaseModal";
 import { CustomInput } from "@/components/common/CustomInput";
 import { CustomButton } from "@/components/common/CustomButton";
 
-// 保留 Select 和 Checkbox (因为没有提供对应的 Custom 版本)
+// 保留 Select 和 Checkbox
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -28,6 +27,7 @@ export const RuleEditorDialog = ({ open, onOpenChange, setId, ruleToEdit, onSave
 
     // 表单状态
     const [pattern, setPattern] = useState("");
+    const [description, setDescription] = useState(""); // 🟢 [新增]
     const [isRegex, setIsRegex] = useState(false);
     const [isCaseSensitive, setIsCaseSensitive] = useState(false);
     const [priority, setPriority] = useState(0);
@@ -44,12 +44,14 @@ export const RuleEditorDialog = ({ open, onOpenChange, setId, ruleToEdit, onSave
         if (open) {
             if (ruleToEdit) {
                 setPattern(ruleToEdit.pattern);
+                setDescription(ruleToEdit.description || ""); // 🟢 [新增] 初始化描述
                 setIsRegex(ruleToEdit.isRegex);
                 setIsCaseSensitive(ruleToEdit.isCaseSensitive);
                 setPriority(ruleToEdit.priority);
                 setStyleId(ruleToEdit.styleId);
             } else {
                 setPattern("");
+                setDescription(""); // 🟢 [新增] 重置描述
                 setIsRegex(false);
                 setIsCaseSensitive(false);
                 setPriority(0);
@@ -65,18 +67,19 @@ export const RuleEditorDialog = ({ open, onOpenChange, setId, ruleToEdit, onSave
         setIsLoading(true);
 
         try {
-            // 1. 编辑模式先删除旧规则
+            // 1. 编辑模式先删除旧规则 (如果后端支持 update 可以优化这里)
             if (ruleToEdit) {
                 await deleteRule(ruleToEdit.id);
             }
 
             // 2. 创建新规则
             await saveRule({
-                set_id: setId,
-                style_id: styleId,
+                setId: setId,
+                styleId: styleId,
                 pattern: pattern,
-                is_regex: isRegex,
-                is_case_sensitive: isCaseSensitive,
+                description: description, // 🟢 [新增] 提交描述
+                isRegex: isRegex,
+                isCaseSensitive: isCaseSensitive,
                 priority: priority
             });
 
@@ -119,7 +122,7 @@ export const RuleEditorDialog = ({ open, onOpenChange, setId, ruleToEdit, onSave
             className="max-w-[450px]"
         >
             <div className="grid gap-5 py-1">
-                {/* 🟢 使用 CustomInput */}
+                {/* Pattern 输入 */}
                 <CustomInput 
                     label="Pattern (Keyword or Regex)"
                     value={pattern} 
@@ -129,14 +132,24 @@ export const RuleEditorDialog = ({ open, onOpenChange, setId, ruleToEdit, onSave
                     startIcon={<Highlighter className="w-4 h-4" />}
                 />
 
-                {/* Style Selection (保留原生 Select，但优化样式适配) */}
+                {/* 🟢 [新增] Description 输入 */}
+                <CustomInput 
+                    label="Description (Optional)"
+                    value={description} 
+                    onChange={(e) => setDescription(e.target.value)} 
+                    placeholder="e.g. Highlight critical errors"
+                    startIcon={<FileText className="w-4 h-4" />}
+                />
+
+                {/* Style Selection */}
                 <div className="space-y-1.5">
                     <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Style</Label>
                     <Select value={styleId} onValueChange={setStyleId}>
                         <SelectTrigger className="w-full backdrop-blur-xl bg-white/60 dark:bg-slate-950/40 border-slate-200/80 dark:border-slate-800/80">
                             <SelectValue placeholder="Select a style" />
                         </SelectTrigger>
-                        <SelectContent>
+                        
+                        <SelectContent className="z-[200]">
                             {savedStyles.length === 0 ? (
                                 <div className="p-2 text-xs text-slate-400 text-center">No styles available</div>
                             ) : (
@@ -171,7 +184,7 @@ export const RuleEditorDialog = ({ open, onOpenChange, setId, ruleToEdit, onSave
                     </div>
                 </div>
 
-                {/* 🟢 使用 CustomInput 处理 Priority */}
+                {/* Priority */}
                 <CustomInput 
                     label="Priority"
                     type="number" 

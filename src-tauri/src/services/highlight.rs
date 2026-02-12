@@ -40,7 +40,36 @@ impl HighlightService {
 
         Ok(id)
     }
+// 🟢 [新增] 重命名/更新 Profile
+    pub async fn update_set(pool: &Pool<Sqlite>, id: &str, name: String, desc: Option<String>) -> Result<(), String> {
+        let now = Self::now();
+        sqlx::query(
+            "UPDATE highlight_rule_sets SET name = ?, description = ?, updated_at = ? WHERE id = ?"
+        )
+        .bind(name)
+        .bind(desc)
+        .bind(now)
+        .bind(id)
+        .execute(pool)
+        .await
+        .map_err(|e| e.to_string())?;
+        Ok(())
+    }
 
+    // 🟢 [新增] 删除 Profile (级联删除规则由数据库外键负责)
+    pub async fn delete_set(pool: &Pool<Sqlite>, id: &str) -> Result<(), String> {
+        // 防止删除默认项 (可选逻辑，根据需求决定是否保留)
+        // let is_default: bool = sqlx::query_scalar("SELECT is_default FROM highlight_rule_sets WHERE id = ?")
+        //    .bind(id).fetch_optional(pool).await.map_err(|e| e.to_string())?.unwrap_or(false);
+        // if is_default { return Err("Cannot delete default profile".into()); }
+
+        sqlx::query("DELETE FROM highlight_rule_sets WHERE id = ?")
+            .bind(id)
+            .execute(pool)
+            .await
+            .map_err(|e| e.to_string())?;
+        Ok(())
+    }
     // === Styles ===
 
     pub async fn get_all_styles(pool: &Pool<Sqlite>) -> Result<Vec<HighlightStyle>, String> {
@@ -56,16 +85,13 @@ impl HighlightService {
         let now = Self::now();
         
         if let Some(id) = dto.id {
-            // Update
+            // Update: 移除 boolean 字段的更新
             sqlx::query(
-                "UPDATE highlight_styles SET name=?, foreground=?, background=?, is_bold=?, is_italic=?, is_underline=?, updated_at=? WHERE id=?"
+                "UPDATE highlight_styles SET name=?, foreground=?, background=?, updated_at=? WHERE id=?"
             )
             .bind(dto.name)
             .bind(dto.foreground)
             .bind(dto.background)
-            .bind(dto.is_bold)
-            .bind(dto.is_italic)
-            .bind(dto.is_underline)
             .bind(now)
             .bind(&id)
             .execute(pool)
@@ -74,18 +100,15 @@ impl HighlightService {
             
             Ok(id)
         } else {
-            // Create
+            // Create: 移除 boolean 字段的插入 (数据库会自动填默认值 0)
             let id = Uuid::new_v4().to_string();
             sqlx::query(
-                "INSERT INTO highlight_styles (id, name, foreground, background, is_bold, is_italic, is_underline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                "INSERT INTO highlight_styles (id, name, foreground, background, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)"
             )
             .bind(&id)
             .bind(dto.name)
             .bind(dto.foreground)
             .bind(dto.background)
-            .bind(dto.is_bold)
-            .bind(dto.is_italic)
-            .bind(dto.is_underline)
             .bind(now)
             .bind(now)
             .execute(pool)
@@ -163,6 +186,41 @@ impl HighlightService {
             .execute(pool)
             .await
             .map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
+    //[新增] 批量重排序规则
+    pub async fn reorder_rules(pool: &Pool<Sqlite>, rule_ids: Vec<String>) -> Result<(), String> {
+        let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
+        
+        let total = rule_ids.len() as i32;
+        
+        // 遍历 ID 列表，索引越小（越靠前），优先级越高
+        for (index, id) in rule_ids.iter().enumerate() {
+            let priority = total - (index as i32);
+            sqlx::query("UPDATE highlight_rules SET priority = ? WHERE id = ?")
+                .bind(priority)
+                .bind(id)
+                .execute(&mut *tx)
+                .await
+                .map_err(|e| e.to_string())?;
+        }
+        
+        tx.commit().await.map_err(|e| e.to_string())?;
+        Ok(())
+    }
+    pub async fn toggle_rule_enabled(pool: &Pool<Sqlite>, id: &str, enabled: bool) -> Result<(), String> {
+        // 获取当前时间戳 (假设你有一个 Self::now() 辅助函数，如果没有直接用 chrono)
+        let now = chrono::Utc::now().timestamp_millis(); 
+        
+        sqlx::query("UPDATE highlight_rules SET is_enabled = ?, updated_at = ? WHERE id = ?")
+            .bind(enabled)
+            .bind(now)
+            .bind(id)
+            .execute(pool)
+            .await
+            .map_err(|e| e.to_string())?;
+            
         Ok(())
     }
 }

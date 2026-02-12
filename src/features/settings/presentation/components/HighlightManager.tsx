@@ -1,283 +1,353 @@
-// src/features/settings/presentation/HighlightManager.tsx
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, Trash2, Edit2, Check, X, Search, Highlighter, Palette } from "lucide-react";
+import { Plus, Trash2, Edit2, Check, X, Search, Highlighter, Palette, GripVertical } from "lucide-react";
 import { clsx } from "clsx";
-import { useSettingsStore } from "../../application/useSettingsStore";
+import { Reorder, useDragControls } from "framer-motion";
 
-// 引入基础 UI 组件
+import { useSettingsStore } from "../../application/useSettingsStore";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button"; // 用于微小图标按钮
-
-// 🟢 引入自定义公共组件
+import { Button } from "@/components/ui/button"; 
+import { Switch } from "@/components/ui/switch";
 import { CustomButton } from "@/components/common/CustomButton";
 
-// 🟢 引入业务弹窗
 import { RuleEditorDialog } from "./highlight/RuleEditorDialog";
 import { StyleManagerDialog } from "./highlight/StyleManagerDialog";
-import { HighlightRule } from "../../domain/types";
+import { HighlightRule, HighlightRuleSet } from "../../domain/types";
 
+// =========================================================
+// SortableRuleItem：高对比度 & 标准排版优化版
+// =========================================================
+interface SortableRuleItemProps {
+  rule: HighlightRule;
+  onEdit: (rule: HighlightRule) => void;
+  onDelete: (id: string) => void;
+}
+
+const SortableRuleItem = ({ rule, onEdit, onDelete }: SortableRuleItemProps) => {
+  const controls = useDragControls();
+  const toggleRuleEnabled = useSettingsStore((s) => s.toggleRuleEnabled);
+  const isChecked = rule.isEnabled ?? true;
+  return (
+    <Reorder.Item
+      value={rule}
+      dragListener={false}
+      dragControls={controls}
+      className={clsx(
+        "flex items-center w-full px-3 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 group transition-colors select-none bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 last:border-0",
+        !isChecked && "opacity-60"
+      )}
+    >
+      {/* 1. 拖拽手柄 */}
+      <div
+        onPointerDown={(e) => controls.start(e)}
+        className="mr-3 cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors touch-none flex-shrink-0 p-1"
+      >
+        <GripVertical className="w-4 h-4" />
+      </div>
+
+      {/* 2. 操作按钮组 (高对比度优化) */}
+      <div className="flex items-center gap-2 mr-5 flex-shrink-0">
+        <div className="flex items-center justify-center">
+          <Switch
+            checked={isChecked}
+            onCheckedChange={(checked) => toggleRuleEnabled(rule.id, checked)}
+            className="scale-75 origin-left"
+          />
+        </div>
+
+        {/* 编辑按钮：明亮模式白底灰边，暗色模式深底亮边 */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 dark:hover:border-blue-800 transition-all shadow-sm"
+          onClick={() => onEdit(rule)}
+        >
+          <Edit2 className="w-3.5 h-3.5" />
+        </Button>
+
+        {/* 删除按钮：明亮模式白底灰边，暗色模式深底亮边 */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-red-600 hover:border-red-300 hover:bg-red-50 dark:hover:bg-red-900/30 dark:hover:border-red-800 transition-all shadow-sm"
+          onClick={() => onDelete(rule.id)}
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </Button>
+      </div>
+
+      {/* 3. 内容展示区 */}
+      <div className="flex-1 min-w-0 flex flex-col justify-center gap-1.5">
+        
+        {/* 🟢 [优化] 描述字段：标准主色，非斜体，类似标题 */}
+        {rule.description && (
+          <div className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate leading-none">
+            {rule.description}
+          </div>
+        )}
+
+        <div className="flex items-center gap-3">
+          {/* 🟢 [优化] Pattern：暗色模式高对比度 (slate-950 背景 + slate-700 边框) */}
+          <div
+            className={clsx(
+              "px-2.5 py-1 rounded text-xs font-mono truncate transition-colors",
+              "w-[200px]", // 固定宽度
+              // 明亮模式：浅灰背景 + 浅边框
+              "bg-slate-50 border border-slate-200 text-slate-700",
+              // 暗色模式：深黑背景 (Input感) + 清晰边框
+              "dark:bg-slate-950 dark:border-slate-700 dark:text-slate-300",
+              !isChecked && "grayscale opacity-70"
+            )}
+            style={{
+              // 如果用户自定义了颜色，则覆盖默认文本色
+              color: rule.style?.foreground || undefined,
+              backgroundColor: rule.style?.background || undefined,
+            }}
+            title={rule.pattern}
+          >
+            {rule.pattern}
+          </div>
+
+          {/* 元数据标记：移除斜体 */}
+          <div className="hidden xl:flex gap-2 text-[12px] text-slate-400 items-center overflow-hidden opacity-70 group-hover:opacity-100 transition-opacity">
+            {rule.isRegex && <span className="flex-shrink-0 text-purple-600 dark:text-purple-400 font-bold font-mono">RE</span>}
+            {rule.isCaseSensitive && <span className="flex-shrink-0 text-amber-600 dark:text-amber-400 font-bold font-mono">Aa</span>}
+            
+            {(rule.isRegex || rule.isCaseSensitive) && (
+                 <span className="w-px h-3 bg-slate-300 dark:bg-slate-700 flex-shrink-0 mx-1" />
+            )}
+            
+            {/* 样式名称：标准字体，非斜体 */}
+            <span className="truncate font-medium">{rule.style?.name || 'Default Style'}</span>
+          </div>
+        </div>
+      </div>
+    </Reorder.Item>
+  );
+};
+
+// =========================================================
+// 主管理组件
+// =========================================================
 export const HighlightManager = () => {
   const { t } = useTranslation();
-  const { 
-    highlightSets, 
-    activeSetId, 
-    currentSetRules, 
-    loadHighlightSets, 
+  const {
+    highlightSets,
+    activeSetId,
+    currentSetRules,
+    loadHighlightSets,
     loadRulesBySet,
     createHighlightSet,
+    updateHighlightSet,
+    deleteHighlightSet,
     deleteRule,
+    reorderRules,
   } = useSettingsStore();
 
-  // Profile 创建状态
   const [isCreatingSet, setIsCreatingSet] = useState(false);
   const [newSetName, setNewSetName] = useState("");
-
-  // 弹窗状态管理
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
   const [isRuleDialogOpen, setIsRuleDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<HighlightRule | null>(null);
   const [isStyleManagerOpen, setIsStyleManagerOpen] = useState(false);
 
-  // 1. 初始化加载 Profile 列表
   useEffect(() => {
     loadHighlightSets();
   }, []);
 
-  // 2. 切换 Profile 时加载对应的规则
   useEffect(() => {
     if (activeSetId) {
-        loadRulesBySet(activeSetId);
+      loadRulesBySet(activeSetId);
     }
   }, [activeSetId]);
 
-  // 处理创建 Profile
   const handleCreateSet = async () => {
-      if (!newSetName.trim()) return;
-      await createHighlightSet(newSetName);
-      setIsCreatingSet(false);
-      setNewSetName("");
+    if (!newSetName.trim()) return;
+    await createHighlightSet(newSetName);
+    setIsCreatingSet(false);
+    setNewSetName("");
   };
 
-  // 打开新增规则弹窗
+  const handleStartRename = (e: React.MouseEvent, set: HighlightRuleSet) => {
+    e.stopPropagation();
+    setRenamingId(set.id);
+    setRenameValue(set.name);
+  };
+
+  const handleSaveRename = async () => {
+    if (!renameValue.trim() || !renamingId) return;
+    const original = highlightSets.find((s) => s.id === renamingId);
+    if (original) {
+      await updateHighlightSet(renamingId, renameValue, original.description);
+    }
+    setRenamingId(null);
+  };
+
   const handleOpenAdd = () => {
-      setEditingRule(null);
-      setIsRuleDialogOpen(true);
+    setEditingRule(null);
+    setIsRuleDialogOpen(true);
   };
 
-  // 打开编辑规则弹窗
   const handleOpenEdit = (rule: HighlightRule) => {
-      setEditingRule(rule);
-      setIsRuleDialogOpen(true);
+    setEditingRule(rule);
+    setIsRuleDialogOpen(true);
+  };
+
+  const handleReorder = (newOrder: HighlightRule[]) => {
+    reorderRules(newOrder.map((r) => r.id));
   };
 
   return (
     <div className="flex h-[500px] w-full border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50/50 dark:bg-slate-900/50 mt-2">
       
-      {/* ======================= Left Sidebar: Profiles ======================= */}
-      <div className="w-[200px] border-r border-slate-200 dark:border-slate-800 flex flex-col bg-white/50 dark:bg-black/20">
+      {/* 左侧 Profile 列表 */}
+      <div className="w-[220px] border-r border-slate-200 dark:border-slate-800 flex flex-col bg-white/50 dark:bg-black/20">
         <div className="p-3 border-b border-slate-200/50 dark:border-slate-800/50 flex justify-between items-center">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Profiles</span>
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsCreatingSet(true)}>
-                <Plus className="w-3.5 h-3.5" />
-            </Button>
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Profiles</span>
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsCreatingSet(true)} disabled={!!renamingId}>
+            <Plus className="w-3.5 h-3.5" />
+          </Button>
         </div>
         
         <ScrollArea className="flex-1">
-            <div className="p-2 space-y-1">
-                {/* 创建输入框 */}
-                {isCreatingSet && (
-                    <div className="flex items-center gap-1 mb-2 px-1 animate-in fade-in slide-in-from-top-1">
-                        <Input 
-                            value={newSetName} 
-                            onChange={e => setNewSetName(e.target.value)} 
-                            className="h-7 text-xs px-2" 
-                            placeholder="Name..."
-                            autoFocus
-                            onKeyDown={e => e.key === 'Enter' && handleCreateSet()}
-                        />
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-green-600" onClick={handleCreateSet}><Check className="w-3 h-3"/></Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-red-500" onClick={() => setIsCreatingSet(false)}><X className="w-3 h-3"/></Button>
-                    </div>
-                )}
+          <div className="p-2 space-y-1">
+            {isCreatingSet && (
+              <div className="flex items-center gap-1 mb-2 px-1 bg-white dark:bg-slate-800 p-1 rounded border border-blue-500/50 animate-in fade-in slide-in-from-top-1">
+                <Input
+                  value={newSetName}
+                  onChange={(e) => setNewSetName(e.target.value)}
+                  className="h-7 text-xs px-2 border-none bg-transparent focus-visible:ring-0"
+                  placeholder="Name..."
+                  autoFocus
+                  onKeyDown={(e) => e.key === "Enter" && handleCreateSet()}
+                />
+                <Button size="icon" variant="ghost" className="h-6 w-6 text-green-600" onClick={handleCreateSet}><Check className="w-3 h-3" /></Button>
+                <Button size="icon" variant="ghost" className="h-6 w-6 text-red-500" onClick={() => setIsCreatingSet(false)}><X className="w-3 h-3" /></Button>
+              </div>
+            )}
 
-                {/* 空状态 */}
-                {highlightSets.length === 0 && !isCreatingSet && (
-                    <div className="text-[10px] text-slate-400 text-center py-4">
-                        No profiles created
-                    </div>
-                )}
+            {highlightSets.map((set) => {
+              const isRenaming = set.id === renamingId;
+              const isActive = activeSetId === set.id;
 
-                {/* 列表渲染 */}
-                {highlightSets.map(set => (
-                    <div 
-                        key={set.id}
-                        onClick={() => loadRulesBySet(set.id)}
-                        className={clsx(
-                            "flex items-center justify-between px-3 py-2 rounded-md text-xs cursor-pointer transition-all select-none",
-                            activeSetId === set.id 
-                                ? "bg-blue-500 text-white shadow-md shadow-blue-500/20 font-medium" 
-                                : "hover:bg-slate-200/50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300"
-                        )}
-                    >
-                        <span className="truncate">{set.name}</span>
-                        {set.isDefault && <div className="w-1.5 h-1.5 rounded-full bg-current opacity-50" />}
-                    </div>
-                ))}
-            </div>
+              if (isRenaming) {
+                return (
+                  <div key={set.id} className="flex items-center gap-1 px-1 py-1 rounded bg-white dark:bg-slate-800 border border-blue-500/50 shadow-sm">
+                    <Input
+                      value={renameValue}
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      className="h-7 text-xs px-2 border-none bg-transparent focus-visible:ring-0"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleSaveRename();
+                        if (e.key === "Escape") setRenamingId(null);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <Button size="icon" variant="ghost" className="h-6 w-6 text-green-600" onClick={handleSaveRename}><Check className="w-3 h-3" /></Button>
+                    <Button size="icon" variant="ghost" className="h-6 w-6 text-slate-400" onClick={() => setRenamingId(null)}><X className="w-3 h-3" /></Button>
+                  </div>
+                );
+              }
+
+              return (
+                <div
+                  key={set.id}
+                  onClick={() => !renamingId && loadRulesBySet(set.id)}
+                  className={clsx(
+                    "group flex items-center justify-between px-3 py-2 rounded-md text-xs cursor-pointer transition-all select-none",
+                    isActive ? "bg-blue-500 text-white shadow-md font-medium" : "hover:bg-slate-200/50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300",
+                    renamingId && "opacity-50 pointer-events-none"
+                  )}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="truncate">{set.name}</span>
+                    {set.isDefault && <div className="w-1.5 h-1.5 rounded-full bg-current opacity-50 shrink-0" />}
+                  </div>
+
+                  <div className={clsx("flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity", isActive ? "text-blue-100" : "text-slate-400")}>
+                    <button onClick={(e) => handleStartRename(e, set)} className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded"><Edit2 className="w-3 h-3" /></button>
+                    {!set.isDefault && (
+                      <button onClick={(e) => { e.stopPropagation(); if (confirm("Delete profile?")) deleteHighlightSet(set.id); }} className="p-1 hover:bg-red-500/20 hover:text-red-500 rounded"><Trash2 className="w-3 h-3" /></button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </ScrollArea>
       </div>
 
-      {/* ======================= Right Content: Rules List ======================= */}
+      {/* 右侧规则列表 */}
       <div className="flex-1 flex flex-col bg-white/30 dark:bg-transparent min-w-0">
-         {/* Toolbar */}
-         <div className="h-[50px] px-4 border-b border-slate-200/50 dark:border-slate-800/50 flex justify-between items-center bg-white/40 dark:bg-white/5 backdrop-blur-sm">
-            <div className="flex items-center gap-3">
-                <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                    {highlightSets.find(s => s.id === activeSetId)?.name || t('settings.appearance.selectProfile', "Select a Profile")}
-                </span>
-                {activeSetId && (
-                    <Badge variant="secondary" className="text-[10px] h-5 px-1.5 font-mono">
-                        {currentSetRules.length} rules
-                    </Badge>
-                )}
-            </div>
-            
-            {/* 顶部操作按钮组 */}
+        <div className="h-[50px] px-4 border-b border-slate-200/50 dark:border-slate-800/50 flex justify-between items-center bg-white/40 dark:bg-white/5 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+              {highlightSets.find((s) => s.id === activeSetId)?.name || "Select a Profile"}
+            </span>
             {activeSetId && (
-                <div className="flex items-center gap-2">
-                    {/* 🟢 打开样式管理器 */}
-                    <CustomButton 
-                        size="sm" 
-                        variant="outline"
-                        className="h-7 text-xs gap-1.5 bg-transparent border-slate-200/60 dark:border-slate-700/60"
-                        onClick={() => setIsStyleManagerOpen(true)}
-                        icon={Palette}
-                    >
-                        Styles
-                    </CustomButton>
-
-                    {/* 🟢 添加规则 */}
-                    <CustomButton 
-                        size="sm" 
-                        className="h-7 text-xs bg-blue-600 hover:bg-blue-700 text-white gap-1.5 shadow-sm"
-                        onClick={handleOpenAdd}
-                        icon={Plus}
-                    >
-                        Add Rule
-                    </CustomButton>
-                </div>
+              <Badge variant="secondary" className="text-[10px] h-5 px-1.5 font-mono">
+                {currentSetRules.length} rules
+              </Badge>
             )}
-         </div>
+          </div>
+          {activeSetId && (
+            <div className="flex items-center gap-2">
+              <CustomButton size="sm" variant="outline" className="h-7 text-xs gap-1.5 bg-transparent border-slate-200/60 dark:border-slate-700/60" onClick={() => setIsStyleManagerOpen(true)} icon={Palette}>Styles</CustomButton>
+              <CustomButton size="sm" className="h-7 text-xs bg-blue-600 hover:bg-blue-700 text-white gap-1.5 shadow-sm" onClick={handleOpenAdd} icon={Plus}>Add Rule</CustomButton>
+            </div>
+          )}
+        </div>
 
-         {/* Rules Content Area */}
-         <div className="flex-1 overflow-hidden relative">
-            {!activeSetId ? (
-                // 未选择 Profile 的空状态
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 gap-3">
-                    <div className="p-4 rounded-full bg-slate-100 dark:bg-white/5">
-                        <Highlighter className="w-8 h-8 opacity-40" />
-                    </div>
-                    <p className="text-sm">Select or create a profile to manage rules</p>
-                </div>
-            ) : currentSetRules.length === 0 ? (
-                // Profile 为空的空状态
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 gap-2">
-                    <Search className="w-6 h-6 opacity-30" />
-                    <span className="text-xs">No highlight rules found</span>
-                </div>
-            ) : (
-                // 规则列表
-                <ScrollArea className="h-full">
-                    <div className="divide-y divide-slate-100 dark:divide-white/5">
-                        {currentSetRules.map(rule => (
-                            <div key={rule.id} className="flex items-center px-4 py-3 hover:bg-slate-50/80 dark:hover:bg-white/5 group transition-colors">
-                                {/* Pattern Preview & Info */}
-                                <div className="flex-1 min-w-0 mr-4">
-                                    <div className="flex items-center gap-3 mb-1.5">
-                                        {/* 预览 Chip：直接应用样式 */}
-                                        <div className="px-2 py-0.5 rounded text-sm font-mono border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20" 
-                                             style={{
-                                                color: rule.style?.foreground || undefined,
-                                                backgroundColor: rule.style?.background || undefined,
-                                                fontWeight: rule.style?.isBold ? 'bold' : 'normal',
-                                                fontStyle: rule.style?.isItalic ? 'italic' : 'normal',
-                                                textDecoration: rule.style?.isUnderline ? 'underline' : 'none',
-                                             }}>
-                                            {rule.pattern}
-                                        </div>
-                                    </div>
-                                    
-                                    {/* 元数据 Badge */}
-                                    <div className="flex gap-2 text-[10px] text-slate-400 items-center">
-                                        {rule.isRegex && <span className="text-purple-500 font-medium">Regex</span>}
-                                        {rule.isCaseSensitive && <span className="text-amber-500 font-medium">Case-Sensitive</span>}
-                                        {!rule.isRegex && !rule.isCaseSensitive && <span className="opacity-50">String Match</span>}
-                                        
-                                        <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700" />
-                                        
-                                        <div className="flex items-center gap-1">
-                                            <div 
-                                                className="w-2 h-2 rounded-full" 
-                                                style={{background: rule.style?.foreground || 'currentColor'}} 
-                                            />
-                                            <span>{rule.style?.name || 'Unknown Style'}</span>
-                                        </div>
-
-                                        {rule.priority > 0 && (
-                                            <>
-                                                <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700" />
-                                                <span className="text-slate-400 opacity-60">Pr: {rule.priority}</span>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Row Actions (Hover Display) */}
-                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="h-8 w-8 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" 
-                                        onClick={() => handleOpenEdit(rule)}
-                                    >
-                                        <Edit2 className="w-3.5 h-3.5"/>
-                                    </Button>
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20" 
-                                        onClick={() => deleteRule(rule.id)}
-                                    >
-                                        <Trash2 className="w-3.5 h-3.5"/>
-                                    </Button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </ScrollArea>
-            )}
-         </div>
+        <div className="flex-1 overflow-hidden relative">
+          {!activeSetId ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 gap-3">
+              <div className="p-4 rounded-full bg-slate-100 dark:bg-white/5"><Highlighter className="w-8 h-8 opacity-40" /></div>
+              <p className="text-sm">Select or create a profile to manage rules</p>
+            </div>
+          ) : currentSetRules.length === 0 ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 gap-2">
+              <Search className="w-6 h-6 opacity-30" />
+              <span className="text-xs">No highlight rules found</span>
+            </div>
+          ) : (
+            <ScrollArea className="h-full">
+              <Reorder.Group
+                axis="y"
+                values={currentSetRules}
+                onReorder={handleReorder}
+                className="w-full flex flex-col"
+              >
+                {currentSetRules.map((rule) => (
+                  <SortableRuleItem
+                    key={rule.id}
+                    rule={rule}
+                    onEdit={handleOpenEdit}
+                    onDelete={deleteRule}
+                  />
+                ))}
+              </Reorder.Group>
+            </ScrollArea>
+          )}
+        </div>
       </div>
 
-      {/* ======================= Dialogs ======================= */}
-      
-      {/* 1. 规则编辑弹窗 */}
       {activeSetId && (
-          <RuleEditorDialog 
-            open={isRuleDialogOpen} 
-            onOpenChange={setIsRuleDialogOpen}
-            setId={activeSetId}
-            ruleToEdit={editingRule}
-            onSave={() => loadRulesBySet(activeSetId)}
-          />
+        <RuleEditorDialog
+          open={isRuleDialogOpen}
+          onOpenChange={setIsRuleDialogOpen}
+          setId={activeSetId}
+          ruleToEdit={editingRule}
+          onSave={() => loadRulesBySet(activeSetId)}
+        />
       )}
 
-      {/* 2. 样式管理弹窗 */}
-      <StyleManagerDialog 
-        open={isStyleManagerOpen} 
-        onOpenChange={setIsStyleManagerOpen} 
+      <StyleManagerDialog
+        open={isStyleManagerOpen}
+        onOpenChange={setIsStyleManagerOpen}
       />
     </div>
   );

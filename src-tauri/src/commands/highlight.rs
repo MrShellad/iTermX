@@ -44,3 +44,23 @@ pub async fn save_highlight_style(style: SaveStyleDto, state: State<'_, AppState
 pub async fn delete_highlight_style(id: String, state: State<'_, AppState>) -> Result<(), String> {
     HighlightService::delete_style(&state.db, &id).await
 }
+
+#[command]
+pub async fn update_highlight_set(id: String, name: String, description: Option<String>, state: State<'_, AppState>) -> Result<(), String> {
+    HighlightService::update_set(&state.db, &id, name, description).await
+}
+
+#[command]
+pub async fn delete_highlight_set(id: String, state: State<'_, AppState>) -> Result<(), String> {
+    HighlightService::delete_set(&state.db, &id).await
+}
+
+#[command]
+pub async fn reorder_highlight_rules(rule_ids: Vec<String>, state: State<'_, AppState>) -> Result<(), String> {
+    HighlightService::reorder_rules(&state.db, rule_ids).await
+}
+
+#[tauri::command]
+pub async fn toggle_highlight_rule(state: State<'_, AppState>, id: String, enabled: bool) -> Result<(), String> {
+    HighlightService::toggle_rule_enabled(&state.db, &id, enabled).await
+}

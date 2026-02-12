@@ -62,9 +62,6 @@ export const StyleManagerDialog = ({ open, onOpenChange }: Props) => {
                                                  style={{
                                                      color: style.foreground || 'inherit',
                                                      backgroundColor: style.background || 'transparent',
-                                                     fontWeight: style.isBold ? 'bold' : 'normal',
-                                                     fontStyle: style.isItalic ? 'italic' : 'normal',
-                                                     textDecoration: style.isUnderline ? 'underline' : 'none',
                                                  }}>
                                                 Aa
                                             </div>

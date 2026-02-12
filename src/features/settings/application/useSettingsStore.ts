@@ -114,15 +114,25 @@ interface SettingsState {
   // Profile (Rule Sets)
   loadHighlightSets: () => Promise<void>;
   createHighlightSet: (name: string, description?: string) => Promise<void>;
-  
+  updateHighlightSet: (id: string, name: string, description?: string) => Promise<void>;
+  deleteHighlightSet: (id: string) => Promise<void>;
   // Rules
   loadRulesBySet: (setId: string) => Promise<void>;
-  saveRule: (rule: { set_id: string; style_id: string; pattern: string; is_regex: boolean; is_case_sensitive: boolean; priority: number }) => Promise<void>;
+  saveRule: (rule: { 
+      setId: string; 
+      styleId: string;
+      description?: string; 
+      pattern: string; 
+      isRegex: boolean; 
+      isCaseSensitive: boolean; 
+      priority: number;
+      isEnabled?: boolean; 
+  }) => Promise<void>;
   deleteRule: (id: string) => Promise<void>;
 
   // Styles (🟢 新增部分)
   loadStyles: () => Promise<void>;
-  saveStyle: (style: { id?: string; name: string; foreground?: string | null; background?: string | null; is_bold: boolean; is_italic: boolean; is_underline: boolean }) => Promise<void>;
+  saveStyle: (style: { id?: string; name: string; foreground?: string | null; background?: string | null }) => Promise<void>;
   deleteStyle: (id: string) => Promise<void>;
 
   // === Proxy Actions (Async / DB) ===
@@ -131,6 +141,9 @@ interface SettingsState {
   removeProxy: (id: string) => Promise<void>;
   updateProxy: (proxy: ProxyItem) => Promise<void>;
   initDeviceIdentity: () => Promise<void>;
+
+  reorderRules: (ruleIds: string[]) => Promise<void>;
+  toggleRuleEnabled: (id: string, enabled: boolean) => Promise<void>;
 }
 
 const defaultSettings = SETTING_ITEMS.reduce((acc, item) => {
@@ -210,7 +223,46 @@ export const useSettingsStore = create<SettingsState>()(
               get().loadHighlightSets(); // 刷新列表
           } catch (e) { console.error("Failed to create set", e); }
       },
+      updateHighlightSet: async (id, name, description) => {
+          try {
+              await invoke('update_highlight_set', { id, name, description });
+              get().loadHighlightSets(); // 刷新列表
+          } catch (e) { console.error("Failed to update set", e); }
+      },
+      deleteHighlightSet: async (id) => {
+          try {
+              await invoke('delete_highlight_set', { id });
+              
+              // 如果删除的是当前选中的，清空选中状态
+              if (get().activeSetId === id) {
+                  set({ activeSetId: null, currentSetRules: [] });
+              }
+              get().loadHighlightSets(); // 刷新列表
+              } catch (e) { console.error("Failed to delete set", e); }
+      },
+      // 🟢 [新增] 实现重排序
+      reorderRules: async (ruleIds) => {
+          // 1. 乐观更新：立即在前端调整顺序，让 UI 丝滑响应
+          const currentRules = get().currentSetRules;
+          const ruleMap = new Map(currentRules.map(r => [r.id, r]));
+          
+          const newRules = ruleIds
+              .map(id => ruleMap.get(id))
+              .filter((r): r is HighlightRule => !!r);
+          
+          // 更新本地状态
+          set({ currentSetRules: newRules });
 
+          try {
+              // 2. 异步请求后端持久化
+              await invoke('reorder_highlight_rules', { ruleIds });
+          } catch (e) {
+              console.error("Failed to reorder rules", e);
+              // 如果失败，重新加载以恢复正确状态
+              const setId = get().activeSetId;
+              if (setId) get().loadRulesBySet(setId);
+          }
+      },
       // --- Rules ---
       loadRulesBySet: async (setId) => {
           set({ activeSetId: setId });
@@ -221,16 +273,33 @@ export const useSettingsStore = create<SettingsState>()(
       },
 
       saveRule: async (ruleDto) => {
-          try {
-              await invoke('save_highlight_rule', { rule: ruleDto });
-              // 保存成功后，刷新当前选中 Set 的规则列表
-              const currentSetId = get().activeSetId;
-              if (currentSetId) {
-                  get().loadRulesBySet(currentSetId);
-              }
-          } catch (e) { console.error("Failed to save rule", e); }
+        try {
+          // ruleDto 内部现在是 { setId, styleId, ... }
+          await invoke('save_highlight_rule', { rule: ruleDto });
+          
+          const currentSetId = get().activeSetId;
+          if (currentSetId) {
+            get().loadRulesBySet(currentSetId);
+          }
+        } catch (e) {
+          console.error("Failed to save rule:", e);
+        }
       },
-
+      toggleRuleEnabled: async (id, enabled) => {
+        try {
+          // 调用后端更新字段
+          await invoke('toggle_highlight_rule', { id, enabled });
+          
+          // 乐观更新 UI
+          set((state) => ({
+            currentSetRules: state.currentSetRules.map(r => 
+              r.id === id ? { ...r, isEnabled: enabled } : r
+            )
+          }));
+        } catch (e) {
+          console.error("Failed to toggle rule:", e);
+        }
+      },
       deleteRule: async (id) => {
           try {
               await invoke('delete_highlight_rule', { id });
@@ -254,9 +323,6 @@ export const useSettingsStore = create<SettingsState>()(
           try {
               await invoke('save_highlight_style', { style: styleDto });
               get().loadStyles(); // 刷新样式库列表
-              
-              // 关键：如果修改了样式，可能影响当前正在展示的规则列表（因为规则包含了样式快照）
-              // 所以如果有选中的 Set，也刷新一下规则列表
               const currentSetId = get().activeSetId;
               if (currentSetId) {
                   get().loadRulesBySet(currentSetId);

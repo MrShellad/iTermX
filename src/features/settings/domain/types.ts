@@ -75,8 +75,10 @@ export interface HighlightRule {
   pattern: string;
   isRegex: boolean;
   isCaseSensitive: boolean;
+  description?: string;
   priority: number;
-  style?: HighlightStyle; 
+  style?: HighlightStyle;
+  isEnabled: boolean; 
   createdAt?: number; // 新增
   updatedAt?: number; // 新增
 }
@@ -95,9 +97,6 @@ export interface HighlightStyle {
   name: string;
   foreground?: string;
   background?: string;
-  isBold: boolean;
-  isItalic: boolean;
-  isUnderline: boolean;
   createdAt?: number; // 新增
   updatedAt?: number; // 新增
 }

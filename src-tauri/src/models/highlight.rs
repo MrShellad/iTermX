@@ -22,9 +22,6 @@ pub struct HighlightStyle {
     pub name: String,
     pub foreground: Option<String>,
     pub background: Option<String>,
-    pub is_bold: bool,
-    pub is_italic: bool,
-    pub is_underline: bool,
     pub created_at: i64,
     pub updated_at: i64,
 }
@@ -37,6 +34,7 @@ pub struct HighlightRule {
     pub set_id: String,
     pub style_id: String,
     pub pattern: String,
+    pub description: Option<String>,
     pub is_regex: bool,
     pub is_case_sensitive: bool,
     pub priority: i32,
@@ -52,6 +50,7 @@ pub struct CreateRuleDto {
     pub set_id: String,
     pub style_id: String,
     pub pattern: String,
+    pub description: Option<String>,
     pub is_regex: bool,
     pub is_case_sensitive: bool,
     pub priority: i32,
@@ -64,7 +63,4 @@ pub struct SaveStyleDto {
     pub name: String,
     pub foreground: Option<String>,
     pub background: Option<String>,
-    pub is_bold: bool,
-    pub is_italic: bool,
-    pub is_underline: bool,
 }

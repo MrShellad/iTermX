@@ -53,7 +53,11 @@ use commands::highlight::{
     save_highlight_rule,
     delete_highlight_rule,
     save_highlight_style,
-    delete_highlight_style
+    delete_highlight_style,
+    update_highlight_set,
+    delete_highlight_set,
+    reorder_highlight_rules,
+    toggle_highlight_rule,
 };
 // ==============================================================================
 // 🟢 [修改 2] 定义窗口配置状态
@@ -260,7 +264,11 @@ pub fn run() {
                 save_highlight_rule,
                 delete_highlight_rule,
                 save_highlight_style,
-                delete_highlight_style
+                delete_highlight_style,
+                update_highlight_set,
+                delete_highlight_set,
+                reorder_highlight_rules,
+                toggle_highlight_rule,
 
         ])
         .run(tauri::generate_context!())
